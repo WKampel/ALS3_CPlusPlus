@@ -15,6 +15,10 @@ ABaseChar::ABaseChar()
 void ABaseChar::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//Input
+	LookUpDownRate = 150.0f;
+	LookLeftRightRate = 150.0f;
 	
 }
 

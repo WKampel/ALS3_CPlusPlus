@@ -26,4 +26,20 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+public:
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
+	bool ShouldSprint;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
+	float LookUpDownRate;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
+	float LookLeftRightRate;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
+	float ForwardAxisValue;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
+	float RightAxisValue;
+
 };
