@@ -26,7 +26,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:
+	//Input
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
 	bool ShouldSprint;
 
@@ -41,5 +44,39 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
 	float RightAxisValue;
+
+	//Essential
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	bool IsMoving;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	bool HasMovementInput;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	float AimYawDelta;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	float AimYawRate;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	float MovementInputVelocityDifference;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	float TargetCharacterRotationDifference;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	float Direction;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential", Replicated)
+	FRotator CharacterRotation;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential", Replicated)
+	FRotator LookingRotation;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	FRotator LastVelocityRotation;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	FRotator LastMovementInputRotation;
 
 };

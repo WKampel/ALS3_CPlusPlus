@@ -2,6 +2,7 @@
 
 
 #include "BaseChar.h"
+#include "UnrealNetwork.h"
 
 // Sets default values
 ABaseChar::ABaseChar()
@@ -19,7 +20,17 @@ void ABaseChar::BeginPlay()
 	//Input
 	LookUpDownRate = 150.0f;
 	LookLeftRightRate = 150.0f;
+
+	//Essential
 	
+}
+
+void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ABaseChar, CharacterRotation, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABaseChar, LookingRotation, COND_SkipOwner);
 }
 
 // Called every frame
