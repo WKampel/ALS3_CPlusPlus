@@ -31,6 +31,8 @@ void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 
 	DOREPLIFETIME_CONDITION(ABaseChar, CharacterRotation, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABaseChar, LookingRotation, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABaseChar, MovementInput, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABaseChar, TargetRotation, COND_SkipOwner);
 }
 
 // Called every frame

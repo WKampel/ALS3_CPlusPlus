@@ -46,6 +46,9 @@ public:
 	float RightAxisValue;
 
 	//Essential
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential", Replicated)
+	FVector MovementInput;
+
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
 	bool IsMoving;
 
@@ -79,4 +82,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
 	FRotator LastMovementInputRotation;
 
+	//ROTATION SYSTEM
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System", Replicated)
+	FRotator TargetRotation;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System")
+	FRotator JumpRotation;
 };
