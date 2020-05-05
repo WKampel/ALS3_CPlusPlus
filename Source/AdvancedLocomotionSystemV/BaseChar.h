@@ -88,4 +88,42 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System")
 	FRotator JumpRotation;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System", Replicated)
+	float RotationOffset;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System")
+	float RotationRateMultiplier;
+
+	//MOVEMENT SYSTEM
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float WalkingSpeed;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float RunningSpeed;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float SprintingSpeed;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float CrouchingSpeed;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float WalkingAcceleration;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float RunningAcceleration;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float WalkingDeceleration;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float RunningDeceleration;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float WalkingGroundFriction;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
+	float RunningGroundFriction;
+
 };

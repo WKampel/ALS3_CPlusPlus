@@ -10,19 +10,33 @@ ABaseChar::ABaseChar()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Input
+	LookUpDownRate = 150.0f;
+	LookLeftRightRate = 150.0f;
+
+	//Essential
+
+	//Rotation System
+	RotationRateMultiplier = 1.0f;
+
+	//Movement System
+	WalkingSpeed = 165.0f;
+	RunningSpeed = 375.0f;
+	SprintingSpeed = 600.0f;
+	CrouchingSpeed = 150.0f;
+	WalkingAcceleration = 800.0f;
+	RunningAcceleration = 1000.0f;
+	WalkingDeceleration = 800.0f;
+	RunningDeceleration = 800.0f;
+	WalkingGroundFriction = 8.0f;
+	RunningGroundFriction = 6.0f;
+
 }
 
 // Called when the game starts or when spawned
 void ABaseChar::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//Input
-	LookUpDownRate = 150.0f;
-	LookLeftRightRate = 150.0f;
-
-	//Essential
-	
 }
 
 void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -33,6 +47,8 @@ void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	DOREPLIFETIME_CONDITION(ABaseChar, LookingRotation, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABaseChar, MovementInput, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABaseChar, TargetRotation, COND_SkipOwner);
+
+	DOREPLIFETIME(ABaseChar, RotationOffset);
 }
 
 // Called every frame
