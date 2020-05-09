@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Gait.h"
+#include "CardinalDirection.h"
 #include "Stance.h"
 #include "RotationMode.h"
 #include "MovementMode.h"
@@ -100,6 +101,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System")
 	float RotationRateMultiplier;
 
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+	TEnumAsByte<ECardinalDirection> CardinalDirection;
+
 	//MOVEMENT SYSTEM
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
 	float WalkingSpeed;
@@ -139,15 +143,36 @@ public:
 	TEnumAsByte<EStance> Stance;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-		TEnumAsByte<ERotationMode> RotationMode;
+	TEnumAsByte<ERotationMode> RotationMode;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-		TEnumAsByte<ECharMovementMode> MovementMode;
+	TEnumAsByte<ECharMovementMode> MovementMode;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-		TEnumAsByte<ECharMovementMode> PrevMovementMode;
+	TEnumAsByte<ECharMovementMode> PrevMovementMode;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-		TEnumAsByte<EViewMode> ViewMode;
+	TEnumAsByte<EViewMode> ViewMode;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+	bool IsAiming;
+
+	//BONE NAMES
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Bone Names")
+	FName PelvisBone;
+
+	//RAGDOLL SYSTEM
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System")
+	FName RagdollPoseSnapshot;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System")
+	bool RagdollOnGround;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System", Replicated)
+	FVector RagdollLocation;
+	
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System")
+	FVector RagdollVelocity;
+
 
 };

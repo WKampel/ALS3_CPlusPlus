@@ -31,7 +31,10 @@ ABaseChar::ABaseChar()
 	WalkingGroundFriction = 8.0f;
 	RunningGroundFriction = 6.0f;
 
-	Gait = Running;
+	Gait = Running; 
+
+	PelvisBone = FName("pelvis");
+	RagdollPoseSnapshot = FName("RagdollPose");
 
 }
 
@@ -49,6 +52,7 @@ void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	DOREPLIFETIME_CONDITION(ABaseChar, LookingRotation, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABaseChar, MovementInput, COND_SkipOwner);
 	DOREPLIFETIME_CONDITION(ABaseChar, TargetRotation, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(ABaseChar, RagdollLocation, COND_SkipOwner);
 
 	DOREPLIFETIME(ABaseChar, RotationOffset);
 }
