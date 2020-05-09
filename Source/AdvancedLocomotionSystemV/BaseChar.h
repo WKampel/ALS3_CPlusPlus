@@ -4,6 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Gait.h"
+#include "Stance.h"
+#include "RotationMode.h"
+#include "MovementMode.h"
+#include "ViewMode.h"
 #include "BaseChar.generated.h"
 
 UCLASS()
@@ -125,5 +130,24 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
 	float RunningGroundFriction;
+
+	//STATE VALUES	
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+	TEnumAsByte<EGait> Gait;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+	TEnumAsByte<EStance> Stance;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+		TEnumAsByte<ERotationMode> RotationMode;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+		TEnumAsByte<ECharMovementMode> MovementMode;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+		TEnumAsByte<ECharMovementMode> PrevMovementMode;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
+		TEnumAsByte<EViewMode> ViewMode;
 
 };

@@ -31,6 +31,8 @@ ABaseChar::ABaseChar()
 	WalkingGroundFriction = 8.0f;
 	RunningGroundFriction = 6.0f;
 
+	Gait = Running;
+
 }
 
 // Called when the game starts or when spawned
