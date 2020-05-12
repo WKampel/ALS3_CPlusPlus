@@ -36,6 +36,11 @@ ABaseChar::ABaseChar()
 	PelvisBone = FName("pelvis");
 	RagdollPoseSnapshot = FName("RagdollPose");
 
+	RightShoulder = true;
+
+	FirstPersonCameraSocket = FName("None");
+
+
 }
 
 // Called when the game starts or when spawned

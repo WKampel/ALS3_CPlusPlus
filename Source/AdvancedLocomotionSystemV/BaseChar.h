@@ -7,9 +7,7 @@
 #include "Gait.h"
 #include "CardinalDirection.h"
 #include "Stance.h"
-#include "RotationMode.h"
 #include "MovementMode.h"
-#include "ViewMode.h"
 #include "BaseChar.generated.h"
 
 UCLASS()
@@ -143,16 +141,11 @@ public:
 	TEnumAsByte<EStance> Stance;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	TEnumAsByte<ERotationMode> RotationMode;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
 	TEnumAsByte<ECharMovementMode> MovementMode;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
 	TEnumAsByte<ECharMovementMode> PrevMovementMode;
 
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	TEnumAsByte<EViewMode> ViewMode;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
 	bool IsAiming;
@@ -174,5 +167,20 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System")
 	FVector RagdollVelocity;
 
+	//DEBUG
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Debug")
+	bool ShowTraces;
 
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Debug")
+	bool ShowSettings;
+
+	//CAMERA SYSTEM
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Camera System")
+	bool RightShoulder;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Camera System")
+	UCurveFloat* CameraLerpCurve;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Camera System")
+	FName FirstPersonCameraSocket;
 };
