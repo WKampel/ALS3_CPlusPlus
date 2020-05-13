@@ -199,10 +199,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CalculateEssentialVariables();
 
+	UFUNCTION(BlueprintCallable)
+	void PlayerMovementInput(bool IsForwardAxis);
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetForwardVector();
+
 private:
 	UFUNCTION(Server, Unreliable)
 	void SR_SetMovementInput(FVector _MovementInput);
 
 	UFUNCTION(Server, Unreliable)
 	void SR_SetLookingRotation(FRotator _LookingRotation);
+
+	FVector GetRightVector();
 };

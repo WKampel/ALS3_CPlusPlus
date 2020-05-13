@@ -125,6 +125,47 @@ void ABaseChar::CalculateEssentialVariables()
 
 }
 
+void ABaseChar::PlayerMovementInput(bool IsForwardAxis)
+{
+	
+	if(MovementMode == ECharMovementMode::Ragdoll){
+		FVector Value = UKismetMathLibrary::Add_VectorVector(UKismetMathLibrary::Multiply_VectorFloat(GetForwardVector(), ForwardAxisValue), UKismetMathLibrary::Multiply_VectorFloat(GetRightVector(), RightAxisValue));
+		FVector NormalizedValue = UKismetMathLibrary::Normal(Value, .0001);
+
+		float Strength = 0;
+
+		switch (Gait) {
+		case EGait::Walking:
+		case EGait::Running:
+			Strength = 500.0f;
+			break;
+		case EGait::Sprinting:
+			Strength = 800.0f;
+		}
+
+		FVector Torque = UKismetMathLibrary::Multiply_VectorFloat(NormalizedValue, Strength);
+
+		GetMesh()->AddTorqueInRadians(FVector(Torque.Y * -1, Torque.X, Torque.Z), PelvisBone, true);
+		GetCharacterMovement()->AddInputVector(NormalizedValue, false);
+
+	} else if(IsForwardAxis){
+		AddMovementInput(GetForwardVector(), ForwardAxisValue, false);			 
+	}else{
+		AddMovementInput(GetRightVector(), RightAxisValue, false);
+	}
+
+}
+
+FVector ABaseChar::GetForwardVector()
+{
+	return UKismetMathLibrary::GetForwardVector(FRotator(0, GetControlRotation().Yaw, 0));
+}
+
+FVector ABaseChar::GetRightVector()
+{
+	return UKismetMathLibrary::GetRightVector(FRotator(0, GetControlRotation().Yaw, 0));
+}
+
 void ABaseChar::SR_SetMovementInput_Implementation(FVector _MovementInput)
 {
 	MovementInput = _MovementInput;
