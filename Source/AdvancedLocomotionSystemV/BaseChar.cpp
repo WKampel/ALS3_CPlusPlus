@@ -3,6 +3,10 @@
 
 #include "BaseChar.h"
 #include "UnrealNetwork.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/World.h"
+#include "Engine/Engine.h"
 
 // Sets default values
 ABaseChar::ABaseChar()
@@ -38,8 +42,12 @@ ABaseChar::ABaseChar()
 
 	RightShoulder = true;
 
-	FirstPersonCameraSocket = FName("None");
+	FirstPersonCameraSocket = FName("head");
 
+	Camera = CreateDefaultSubobject<UCameraComponent>(FName("Camera"));
+	Camera->FieldOfView = 100.0f;
+	Camera->bUsePawnControlRotation = true;
+	Camera->AttachTo(GetMesh(), FirstPersonCameraSocket);
 
 }
 
@@ -76,3 +84,53 @@ void ABaseChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+//ALS FUNCTIONS
+FVector ABaseChar::ChooseVelocity()
+{
+	if(MovementMode == ECharMovementMode::Ragdoll) return GetMesh()->GetPhysicsLinearVelocity(PelvisBone);
+	return GetVelocity();
+}
+
+void ABaseChar::CalculateEssentialVariables()
+{
+
+	//IsMoving
+	IsMoving = UKismetMathLibrary::NotEqual_VectorVector(FVector(ChooseVelocity().X, ChooseVelocity().Y, 0), FVector(0, 0, 0), 1.0f);
+
+	if(IsMoving){
+		LastVelocityRotation = UKismetMathLibrary::Conv_VectorToRotator(ChooseVelocity());
+		Direction = UKismetMathLibrary::NormalizedDeltaRotator(LastVelocityRotation, CharacterRotation).Yaw;
+	}
+
+	if(IsLocallyControlled()){
+		MovementInput = GetCharacterMovement()->GetLastInputVector();
+		SR_SetMovementInput(MovementInput);
+	}
+
+	HasMovementInput = UKismetMathLibrary::NotEqual_VectorVector(MovementInput, FVector(0, 0, 0), .0001f);
+
+	if(HasMovementInput){
+		LastMovementInputRotation = UKismetMathLibrary::Conv_VectorToRotator(MovementInput);
+		MovementInputVelocityDifference = UKismetMathLibrary::NormalizedDeltaRotator(LastMovementInputRotation, LastVelocityRotation).Yaw;
+	}
+
+	if(IsLocallyControlled()){
+		PrevAimYaw = LookingRotation.Yaw;
+		LookingRotation = GetControlRotation();
+		SR_SetLookingRotation(LookingRotation);
+		AimYawRate = (LookingRotation.Yaw - PrevAimYaw) / GetWorld()->GetDeltaSeconds();
+	}
+
+	AimYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(LookingRotation, CharacterRotation).Yaw;
+
+}
+
+void ABaseChar::SR_SetMovementInput_Implementation(FVector _MovementInput)
+{
+	MovementInput = _MovementInput;
+}
+
+void ABaseChar::SR_SetLookingRotation_Implementation(FRotator _LookingRotation)
+{
+	LookingRotation = _LookingRotation;
+}

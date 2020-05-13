@@ -8,6 +8,7 @@
 #include "CardinalDirection.h"
 #include "Stance.h"
 #include "MovementMode.h"
+#include "Camera/CameraComponent.h"
 #include "BaseChar.generated.h"
 
 UCLASS()
@@ -33,6 +34,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
+
+	UPROPERTY(EditAnywhere)
+	UCameraComponent* Camera;
+
 	//Input
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
 	bool ShouldSprint;
@@ -64,6 +69,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
 	float AimYawRate;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
+	float PrevAimYaw;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
 	float MovementInputVelocityDifference;
@@ -183,4 +191,18 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Camera System")
 	FName FirstPersonCameraSocket;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	FVector ChooseVelocity();
+
+	UFUNCTION(BlueprintCallable)
+	void CalculateEssentialVariables();
+
+private:
+	UFUNCTION(Server, Unreliable)
+	void SR_SetMovementInput(FVector _MovementInput);
+
+	UFUNCTION(Server, Unreliable)
+	void SR_SetLookingRotation(FRotator _LookingRotation);
 };
