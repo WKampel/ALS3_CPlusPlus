@@ -4,9 +4,11 @@
 #include "BaseChar.h"
 #include "UnrealNetwork.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 ABaseChar::ABaseChar()
@@ -159,6 +161,28 @@ void ABaseChar::PlayerMovementInput(bool IsForwardAxis)
 FVector ABaseChar::GetForwardVector()
 {
 	return UKismetMathLibrary::GetForwardVector(FRotator(0, GetControlRotation().Yaw, 0));
+}
+
+FRotator ABaseChar::CalculateActorRotationInRagdoll(FRotator _RagdollRotation)
+{
+
+	float Yaw = (_RagdollRotation.Roll > 0) ? _RagdollRotation.Yaw : _RagdollRotation.Yaw - 180;
+	return FRotator(0, Yaw, 0);
+}
+
+FVector ABaseChar::CalculateActorLocationInRagdoll(FVector _RagdollLocation)
+{
+	FHitResult HitResult;
+
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), _RagdollLocation, FVector(_RagdollLocation.X, _RagdollLocation.Y, _RagdollLocation.Z - GetCapsuleComponent()->GetScaledCapsuleHalfHeight()), UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility), false, TArray<AActor*>(), EDrawDebugTrace::Type::ForOneFrame, HitResult, true, FLinearColor::Black, FLinearColor::Black, 5);
+
+	RagdollOnGround = HitResult.bBlockingHit;
+
+	float Z = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - UKismetMathLibrary::Abs(HitResult.ImpactPoint.Z - HitResult.TraceStart.Z) + 2.0f;
+
+	if(!RagdollOnGround) Z = 0;
+
+	return FVector(_RagdollLocation.X, _RagdollLocation.Y, _RagdollLocation.Z + Z);
 }
 
 FVector ABaseChar::GetRightVector()

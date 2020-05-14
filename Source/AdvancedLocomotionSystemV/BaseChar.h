@@ -205,6 +205,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector GetForwardVector();
 
+	UFUNCTION(BlueprintCallable)
+	FRotator CalculateActorRotationInRagdoll(FRotator _RagdollRotation);
+
+	UFUNCTION(BlueprintCallable)
+	FVector CalculateActorLocationInRagdoll(FVector _RagdollLocation);
+
+
 private:
 	UFUNCTION(Server, Unreliable)
 	void SR_SetMovementInput(FVector _MovementInput);
