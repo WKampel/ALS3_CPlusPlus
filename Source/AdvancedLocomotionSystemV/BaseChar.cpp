@@ -185,6 +185,77 @@ FVector ABaseChar::CalculateActorLocationInRagdoll(FVector _RagdollLocation)
 	return FVector(_RagdollLocation.X, _RagdollLocation.Y, _RagdollLocation.Z + Z);
 }
 
+void ABaseChar::SetCharacterRotation(FRotator _TargetRotation, bool _InterpRotation, float _InterpSpeed)
+{
+	TargetRotation = _TargetRotation;
+	TargetCharacterRotationDifference = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CharacterRotation).Yaw;
+
+	if(_InterpRotation){
+	
+		if(_InterpSpeed != 0.0f){
+			CharacterRotation = UKismetMathLibrary::RInterpTo(CharacterRotation, TargetRotation, GetWorld()->GetDeltaSeconds(), _InterpSpeed);
+		} else{
+			return;
+		}
+		
+	}else{
+		CharacterRotation = TargetRotation;
+	}
+
+	SetActorRotation(CharacterRotation, ETeleportType::ResetPhysics);
+	SR_SetCharacterRotation(TargetRotation, CharacterRotation);
+
+}
+
+void ABaseChar::AddCharacterRotation(FRotator _AddAmount)
+{
+	TargetRotation = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, UKismetMathLibrary::NegateRotator(_AddAmount));
+
+	TargetCharacterRotationDifference = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CharacterRotation).Yaw;
+
+	CharacterRotation = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, UKismetMathLibrary::NegateRotator(_AddAmount));
+
+	SetActorRotation(CharacterRotation, ETeleportType::ResetPhysics);
+	SR_SetCharacterRotation(TargetRotation, CharacterRotation);
+}
+
+void ABaseChar::LimitRotation(float _AimYawLimit, float _InterpSpeed)
+{
+	if(UKismetMathLibrary::Abs(AimYawDelta) > _AimYawLimit){
+		float Yaw = LookingRotation.Yaw + _AimYawLimit;
+
+		if(AimYawDelta > 0) Yaw = LookingRotation.Yaw - _AimYawLimit;
+
+		SetCharacterRotation(FRotator(0, Yaw, 0), true, _InterpSpeed);
+	}
+}
+
+float ABaseChar::CalculateRotationRateNew(float _SlowSpeed, float _SlowSpeedRate, float _FastSpeed, float _FastSpeedRate)
+{
+	if(RotationRateMultiplier != 1.0f){
+		RotationRateMultiplier = UKismetMathLibrary::FClamp(RotationRateMultiplier + GetWorld()->GetDeltaSeconds(), 0, 1);
+	}
+
+	float Value = 0.0f;
+	float XYSpeed = UKismetMathLibrary::VSize(FVector(ChooseVelocity().X, ChooseVelocity().Y, 0.0f));
+
+	if(XYSpeed > _SlowSpeed){
+		Value = UKismetMathLibrary::MapRangeUnclamped(XYSpeed, _SlowSpeed, _FastSpeed, _SlowSpeedRate, _FastSpeedRate);
+	} else{
+		Value = UKismetMathLibrary::MapRangeUnclamped(XYSpeed, 0, _SlowSpeed, 0, _SlowSpeedRate);
+	}
+
+	return UKismetMathLibrary::FClamp(Value * RotationRateMultiplier, 0.1f, 15.0f);
+}
+
+void ABaseChar::SR_SetCharacterRotation_Implementation(FRotator _TargetRotation, FRotator _CharacterRotation)
+{
+	TargetRotation = _TargetRotation;
+	CharacterRotation = _CharacterRotation;
+
+	SetActorRotation(CharacterRotation, ETeleportType::ResetPhysics);
+}
+
 FVector ABaseChar::GetRightVector()
 {
 	return UKismetMathLibrary::GetRightVector(FRotator(0, GetControlRotation().Yaw, 0));

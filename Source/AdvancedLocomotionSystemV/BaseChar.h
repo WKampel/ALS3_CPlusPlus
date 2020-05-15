@@ -211,6 +211,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector CalculateActorLocationInRagdoll(FVector _RagdollLocation);
 
+	UFUNCTION(BlueprintCallable)
+		void SetCharacterRotation(FRotator _TargetRotation, bool _InterpRotation, float _InterpSpeed);
+
+	UFUNCTION(BlueprintCallable)
+	void AddCharacterRotation(FRotator _AddAmount);
+
+	UFUNCTION(BlueprintCallable)
+	void LimitRotation(float _AimYawLimit, float _InterpSpeed);
+
+	UFUNCTION(BlueprintCallable)
+	float CalculateRotationRateNew(float _SlowSpeed, float _SlowSpeedRate, float _FastSpeed, float _FastSpeedRate);
 
 private:
 	UFUNCTION(Server, Unreliable)
@@ -218,6 +229,9 @@ private:
 
 	UFUNCTION(Server, Unreliable)
 	void SR_SetLookingRotation(FRotator _LookingRotation);
+
+	UFUNCTION(Server, Unreliable)
+	void SR_SetCharacterRotation(FRotator _TargetRotation, FRotator _CharacterRotation);
 
 	FVector GetRightVector();
 };
