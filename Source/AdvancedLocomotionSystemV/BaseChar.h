@@ -273,6 +273,6 @@ private:
 
 	FVector GetRightVector();
 
-	void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PrevCustomMode) override;
+	void OnMovementModeChanged(EMovementMode PrevMovementMode,  uint8 PrevCustomMode) override;
 
 };

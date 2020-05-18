@@ -413,13 +413,13 @@ void ABaseChar::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 Prev
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PrevCustomMode);
 
-	switch(MovementMode){
+	switch(GetCharacterMovement()->MovementMode){
 		case EMovementMode::MOVE_Walking:
 		case EMovementMode::MOVE_NavWalking:
-
+			SetMovementMode(ECharMovementMode::Grounded);
 			break;
 		case EMovementMode::MOVE_Falling:
-
+			SetMovementMode(ECharMovementMode::Falling);
 			break;
 	}
 
