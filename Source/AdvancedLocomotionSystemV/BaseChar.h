@@ -35,6 +35,7 @@ public:
 
 public:
 
+
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* Camera;
 
@@ -221,7 +222,44 @@ public:
 	void LimitRotation(float _AimYawLimit, float _InterpSpeed);
 
 	UFUNCTION(BlueprintCallable)
-	float CalculateRotationRateNew(float _SlowSpeed, float _SlowSpeedRate, float _FastSpeed, float _FastSpeedRate);
+	float CalculateRotationRate(float _SlowSpeed, float _SlowSpeedRate, float _FastSpeed, float _FastSpeedRate);
+
+	UFUNCTION(BlueprintCallable)
+	bool CardinalDirectionAngles(float _Value, float _Min, float _Max, float _Buffer, ECardinalDirection _CardinalDirection);
+
+	UFUNCTION(BlueprintCallable)
+	FRotator LookingDirectionWithOffset(float _OffsetInterpSpeed, float _NEAngle, float _NWAngle, float _SEAngle, float _SWAngle, float _Buffer);
+
+	UFUNCTION(BlueprintCallable)
+	bool CanSprint();
+
+	UFUNCTION(BlueprintCallable)
+	void CustomAcceleration();
+
+	UFUNCTION(BlueprintCallable)
+	float ChooseGroundFriction();
+
+	UFUNCTION(BlueprintCallable)
+	float ChooseMaxAcceleration();
+
+	UFUNCTION(BlueprintCallable)
+		float ChooseBrakingDeceleration();
+
+	UFUNCTION(BlueprintCallable)
+		float ChooseMaxWalkSpeed();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateCharacterMovementSettings();
+
+	//Setters
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+	void SetMovementMode(TEnumAsByte<ECharMovementMode> _NewMovementMode);
+
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+	void SetGait(TEnumAsByte<EGait> _NewGait);
+
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+	void SetStance(TEnumAsByte<EStance> _NewStance);
 
 private:
 	UFUNCTION(Server, Unreliable)
@@ -234,4 +272,7 @@ private:
 	void SR_SetCharacterRotation(FRotator _TargetRotation, FRotator _CharacterRotation);
 
 	FVector GetRightVector();
+
+	void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PrevCustomMode) override;
+
 };
