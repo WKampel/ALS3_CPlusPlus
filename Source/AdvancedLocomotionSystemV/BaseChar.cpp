@@ -54,6 +54,25 @@ ABaseChar::ABaseChar()
 	Camera->AttachTo(GetMesh(), FirstPersonCameraSocket);
 
 
+	JumpMaxHoldTime = 0.5f;
+	BaseEyeHeight = 0.0f;
+	bUseControllerRotationYaw = false;
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(90.0f);
+	GetCapsuleComponent()->SetCapsuleRadius(30.0f);
+
+	GetMesh()->bUpdateJointsFromAnimation = true;
+
+	GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
+	GetCharacterMovement()->CrouchedHalfHeight = 60.0f;
+	GetCharacterMovement()->SetWalkableFloorAngle(50.0f);
+	GetCharacterMovement()->bCanWalkOffLedgesWhenCrouching = true;
+	GetCharacterMovement()->JumpZVelocity = 350.0f;
+	GetCharacterMovement()->AirControl = 0.1f;
+	GetCharacterMovement()->RotationRate = FRotator(0, 0, 0);
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCharacterMovement()->NavAgentProps.bCanFly = true;
+
 }
 
 // Called when the game starts or when spawned
@@ -62,6 +81,12 @@ void ABaseChar::BeginPlay()
 	Super::BeginPlay();
 
 	GetMesh()->AddTickPrerequisiteActor(this);
+
+	LastVelocityRotation = GetActorRotation();
+	LookingRotation = GetActorRotation();
+	LastMovementInputRotation = GetActorRotation();
+	TargetRotation = GetActorRotation();
+	CharacterRotation = GetActorRotation();
 }
 
 void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -75,6 +100,126 @@ void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	DOREPLIFETIME_CONDITION(ABaseChar, RagdollLocation, COND_SkipOwner);
 
 	DOREPLIFETIME(ABaseChar, RotationOffset);
+}
+
+// Called every frame
+void ABaseChar::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	CalculateEssentialVariables();
+
+	switch(MovementMode){
+		case ECharMovementMode::Grounded:
+		TickGrounded(DeltaTime);
+		break;
+		case ECharMovementMode::Ragdoll:
+		TickRagdoll(DeltaTime);
+	}
+
+	//Sprint check
+	if(IsLocallyControlled()){
+		
+		if(ShouldSprint){
+			
+			if(Gait != EGait::Sprinting){
+				
+				if(CanSprint()){
+					SetGait(EGait::Sprinting);	
+				} else{
+					SetGait(EGait::Running);
+				}
+
+			}
+
+		}else{
+			if(Gait == EGait::Sprinting){
+				SetGait(EGait::Running);
+			}
+		}
+
+	}
+
+	TickManageCharacterRotation(DeltaTime);
+}
+
+void ABaseChar::TickGrounded(float DeltaTime){
+	
+	if(Stance == EStance::Standing){
+		switch(Gait){
+			case EGait::Running:
+			case EGait::Sprinting:
+			CustomAcceleration();
+		}
+	}
+
+}
+
+void ABaseChar::TickRagdoll(float DeltaTime){
+	
+	//Set "stiffness" of ragdoll based on velocity. Faster ragdoll moves, more stiff it's joints become.
+	float InSpring = UKismetMathLibrary::MapRangeClamped(UKismetMathLibrary::VSize(ChooseVelocity()), 0.0f, 1000.0f, 0.0f, 25000.0f);
+	GetMesh()->SetAllMotorsAngularDriveParams(InSpring, 0.0f, 0.0f, false);
+
+	if(!IsLocallyControlled()){
+		//Ragdolls not locally controlled on the client will be pushed toward the replicated 'Ragdoll Location' vector.
+		//They will simulate separately, but will end up in the same location. :)
+		FVector Force = UKismetMathLibrary::Multiply_VectorFloat(UKismetMathLibrary::Subtract_VectorVector(RagdollLocation, GetMesh()->GetSocketLocation(PelvisBone)), 200.0f);
+		GetMesh()->AddForce(Force, PelvisBone, true);
+
+		return;
+	} 
+
+	//Disable gravity if falling too fast. This prevents ragdoll from continuously accelerating. 
+	//This helps to keep ragdoll movement stable and will prevent it from falling through floor. :)
+	if(ChooseVelocity().Z < -4000){
+		GetMesh()->SetEnableGravity(false);
+	}else{
+		GetMesh()->SetEnableGravity(true);
+	}
+
+	RagdollVelocity = ChooseVelocity();
+	RagdollLocation = GetMesh()->GetSocketLocation(PelvisBone);
+
+	FVector LocInRagdoll = CalculateActorLocationInRagdoll(RagdollLocation);
+	FRotator RotInRagdoll = CalculateActorRotationInRagdoll(GetMesh()->GetSocketRotation(PelvisBone));
+
+	SetActorLocation(LocInRagdoll, false, false);
+	TargetRotation = RotInRagdoll;
+
+	TargetCharacterRotationDifference = UKismetMathLibrary::NormalizedDeltaRotator(TargetRotation, CharacterRotation).Yaw;
+
+	CharacterRotation = RotInRagdoll;
+	SetActorRotation(CharacterRotation, ETeleportType::ResetPhysics);
+
+
+	SR_Update_Ragdoll(RagdollVelocity, RagdollLocation, RotInRagdoll, LocInRagdoll);
+
+}
+
+void ABaseChar::TickManageCharacterRotation(float DeltaTime) {
+	if(IsLocallyControlled()){
+		if(MovementMode == ECharMovementMode::Grounded){
+			
+			if(!IsMoving){
+				LimitRotation(90.0f, 15.0f);
+				return;
+			}
+
+			FRotator TargetRot = LookingDirectionWithOffset(5.0f, 60.0f, -60.0f, 120.0f, -120.0f, 5.0f);
+
+			if(IsAiming){
+				SetCharacterRotation(TargetRot, true, CalculateRotationRate(165.0f, 15.0f, 375.0f, 15.0f));
+			}else{
+				SetCharacterRotation(TargetRot, true, CalculateRotationRate(165.0f, 10.0f, 375.0f, 15.0f));
+			}
+			
+		} else if (MovementMode == ECharMovementMode::Falling) {
+			JumpRotation = LookingRotation;
+
+			SetCharacterRotation(FRotator(0.0f, JumpRotation.Yaw, 0.0f), true, 10.0f);
+		}
+	}
 }
 
 void ABaseChar::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
@@ -125,14 +270,97 @@ void ABaseChar::BPI_AddCharacterRotation_Implementation(FRotator _AddAmount)
 
 void ABaseChar::BPI_CameraShake_Implementation(TSubclassOf<UCameraShake> ShakeClass, float Scale)
 {
-	
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+
+	if(!PlayerController){
+		return;
+	}
+
+	PlayerController->ClientPlayCameraShake(ShakeClass, Scale, ECameraAnimPlaySpace::CameraLocal, FRotator(0, 0, 0));
 }
 
-// Called every frame
-void ABaseChar::Tick(float DeltaTime)
+void ABaseChar::ToggleStance()
 {
-	Super::Tick(DeltaTime);
+	if(MovementMode == ECharMovementMode::Grounded){
+		switch(Stance){
+			case EStance::Standing:
+				Crouch();
+				break;
+			case EStance::Crouching:
+				UnCrouch();
+		}
+	}
+}
 
+void ABaseChar::MoveForwardsBackwards(float _AxisValue)
+{
+	ForwardAxisValue = _AxisValue;
+	PlayerMovementInput(true);
+}
+
+void ABaseChar::MoveRightLeft(float _AxisValue)
+{
+	RightAxisValue = _AxisValue;
+	PlayerMovementInput(false);
+}
+
+void ABaseChar::LookUpDown(float _AxisValue)
+{
+	AddControllerPitchInput(LookUpDownRate * _AxisValue * GetWorld()->GetDeltaSeconds());
+}
+
+void ABaseChar::LookLeftRight(float _AxisValue)
+{
+	AddControllerYawInput(LookLeftRightRate * _AxisValue * GetWorld()->GetDeltaSeconds());
+}
+
+void ABaseChar::Pressed_JumpAction()
+{	
+	if(Stance == EStance::Standing){
+		if(!IsPlayingRootMotion()) Jump();
+	}else if(Stance == EStance::Crouching){
+		UnCrouch();
+	}
+}
+
+void ABaseChar::Released_JumpAction()
+{
+	StopJumping();
+}
+
+void ABaseChar::Pressed_AimAction(){
+	SetAiming(true);
+}
+
+void ABaseChar::Released_AimAction() {
+	SetAiming(false);
+}
+
+void ABaseChar::Pressed_SprintAction()
+{
+	ShouldSprint = true;
+
+	if(Gait == EGait::Walking){
+		Gait = EGait::Running;
+	}
+}
+
+void ABaseChar::Released_SprintAction()
+{
+	ShouldSprint = false;
+}
+
+void ABaseChar::Pressed_RagdollAction()
+{
+	switch(MovementMode){
+		case ECharMovementMode::Grounded:
+		case ECharMovementMode::Falling:
+		To_Ragdoll();
+		break;
+		case ECharMovementMode::Ragdoll:
+		Un_Ragdoll();
+	}
 }
 
 // Called to bind functionality to input
@@ -140,6 +368,24 @@ void ABaseChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseChar::MoveForwardsBackwards);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseChar::MoveRightLeft);
+
+	PlayerInputComponent->BindAxis("LookUp", this, &ABaseChar::LookUpDown);
+	PlayerInputComponent->BindAxis("LookLeft", this, &ABaseChar::LookLeftRight);
+
+	PlayerInputComponent->BindAction("StanceAction", EInputEvent::IE_Pressed, this, &ABaseChar::ToggleStance);
+
+	PlayerInputComponent->BindAction("JumpAction", EInputEvent::IE_Pressed, this, &ABaseChar::Pressed_JumpAction);
+	PlayerInputComponent->BindAction("JumpAction", EInputEvent::IE_Released, this, &ABaseChar::Released_JumpAction);
+
+	PlayerInputComponent->BindAction("AimAction", EInputEvent::IE_Pressed, this, &ABaseChar::Pressed_AimAction);
+	PlayerInputComponent->BindAction("AimAction", EInputEvent::IE_Released, this, &ABaseChar::Released_AimAction);
+
+	PlayerInputComponent->BindAction("SprintAction", EInputEvent::IE_Pressed, this, &ABaseChar::Pressed_SprintAction);
+	PlayerInputComponent->BindAction("SprintAction", EInputEvent::IE_Released, this, &ABaseChar::Released_SprintAction);
+
+	PlayerInputComponent->BindAction("RagdollAction", EInputEvent::IE_Pressed, this, &ABaseChar::Pressed_RagdollAction);
 }
 
 //ALS FUNCTIONS

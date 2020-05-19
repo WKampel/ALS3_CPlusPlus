@@ -45,6 +45,24 @@ public:
 	void BPI_CameraShake(TSubclassOf<UCameraShake> ShakeClass, float Scale);
 	virtual void BPI_CameraShake_Implementation(TSubclassOf<UCameraShake> ShakeClass, float Scale) override;
 
+	void ToggleStance();
+	void MoveForwardsBackwards(float _AxisValue);
+	void MoveRightLeft(float _AxisValue);
+
+	void LookUpDown(float _AxisValue);
+	void LookLeftRight(float _AxisValue);
+
+	void Pressed_JumpAction();
+	void Released_JumpAction();
+
+	void Pressed_AimAction();
+	void Released_AimAction();
+
+	void Pressed_SprintAction();
+	void Released_SprintAction();
+
+	void Pressed_RagdollAction();
+
 public:
 
 
@@ -349,5 +367,7 @@ private:
 	void OnMovementModeChanged(EMovementMode PrevMovementMode,  uint8 PrevCustomMode) override;
 
 
-
+	void TickGrounded(float DeltaTime);
+	void TickRagdoll(float DeltaTime);
+	void TickManageCharacterRotation(float DeltaTime);
 };
