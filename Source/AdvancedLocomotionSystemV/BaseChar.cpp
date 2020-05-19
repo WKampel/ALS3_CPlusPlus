@@ -60,6 +60,8 @@ ABaseChar::ABaseChar()
 void ABaseChar::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetMesh()->AddTickPrerequisiteActor(this);
 }
 
 void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
