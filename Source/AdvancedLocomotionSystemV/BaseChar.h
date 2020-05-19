@@ -33,6 +33,11 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
+	virtual void Landed(const FHitResult& Hit) override;
+
 public:
 
 
@@ -259,7 +264,10 @@ public:
 	void SetGait(TEnumAsByte<EGait> _NewGait);
 
 	UFUNCTION(BlueprintCallable, Category = "Setters")
-	void SetStance(TEnumAsByte<EStance> _NewStance);
+		void SetStance(TEnumAsByte<EStance> _NewStance);
+
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+		void SetAiming(bool _NewAiming);
 
 private:
 	UFUNCTION(Server, Unreliable)
@@ -271,8 +279,22 @@ private:
 	UFUNCTION(Server, Unreliable)
 	void SR_SetCharacterRotation(FRotator _TargetRotation, FRotator _CharacterRotation);
 
+	UFUNCTION(Server, Unreliable)
+		void SR_SetGait(const EGait _NewGait);
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void MC_SetGait(const EGait _NewGait);
+
+	UFUNCTION(Server, Unreliable)
+		void SR_SetAiming(bool _NewAiming);
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void MC_SetAiming(bool _NewAiming);
+
 	FVector GetRightVector();
 
 	void OnMovementModeChanged(EMovementMode PrevMovementMode,  uint8 PrevCustomMode) override;
+
+
 
 };

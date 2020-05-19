@@ -10,6 +10,7 @@
 #include "Engine/Engine.h"
 #include "Components/CapsuleComponent.h"
 #include "Locomotion_Interface.h"
+#include "Engine/LatentActionManager.h"
 
 // Sets default values
 ABaseChar::ABaseChar()
@@ -72,6 +73,40 @@ void ABaseChar::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	DOREPLIFETIME_CONDITION(ABaseChar, RagdollLocation, COND_SkipOwner);
 
 	DOREPLIFETIME(ABaseChar, RotationOffset);
+}
+
+void ABaseChar::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+
+	SetStance(EStance::Crouching);	
+}
+
+void ABaseChar::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+	SetStance(EStance::Standing);
+}
+
+void ABaseChar::Landed(const FHitResult & Hit)
+{
+
+	Super::Landed(Hit);
+
+	if(HasMovementInput){
+		GetCharacterMovement()->BrakingFrictionFactor = 0.5f;
+	} else{
+		GetCharacterMovement()->BrakingFrictionFactor = 3.0f;
+	}
+
+	FTimerDelegate TimerCallback;
+	TimerCallback.BindLambda([&]
+	{
+		GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
+	});
+
+	FTimerHandle Handle;
+	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 0.2f, false);
 }
 
 // Called every frame
@@ -390,10 +425,61 @@ void ABaseChar::SetMovementMode(TEnumAsByte<ECharMovementMode> _NewMovementMode)
 
 void ABaseChar::SetGait(TEnumAsByte<EGait> _NewGait)
 {
+	if(_NewGait != Gait){
+		Gait = _NewGait;
+
+		SR_SetGait(_NewGait);
+
+		//on change
+		ILocomotion_Interface::Execute_BPI_SetGait(GetMesh()->GetAnimInstance(), Gait);
+
+		UpdateCharacterMovementSettings();
+	}
 }
 
 void ABaseChar::SetStance(TEnumAsByte<EStance> _NewStance)
 {
+	if(_NewStance != Stance){
+		Stance = _NewStance;
+
+		//on change
+		ILocomotion_Interface::Execute_BPI_SetStance(GetMesh()->GetAnimInstance(), Stance);
+		ILocomotion_Interface::Execute_BPI_SetStance(GetMesh()->GetPostProcessInstance(), Stance);
+
+		UpdateCharacterMovementSettings();
+
+
+	}
+}
+
+void ABaseChar::SetAiming(bool _NewAiming)
+{
+	if(_NewAiming != IsAiming){
+		IsAiming = _NewAiming;
+
+		SR_SetAiming(IsAiming);
+
+		//on change
+		ILocomotion_Interface::Execute_BPI_SetAiming(GetMesh()->GetAnimInstance(), IsAiming);
+
+		UpdateCharacterMovementSettings();
+	}
+}
+
+void ABaseChar::SR_SetAiming_Implementation(bool _NewAiming)
+{
+	MC_SetAiming(_NewAiming);
+}
+
+void ABaseChar::MC_SetAiming_Implementation(bool _NewAiming)
+{
+	if(!IsLocallyControlled()){
+		IsAiming = _NewAiming;
+
+		ILocomotion_Interface::Execute_BPI_SetAiming(GetMesh()->GetAnimInstance(), IsAiming);
+
+		UpdateCharacterMovementSettings();
+	}
 }
 
 void ABaseChar::SR_SetCharacterRotation_Implementation(FRotator _TargetRotation, FRotator _CharacterRotation)
@@ -402,6 +488,23 @@ void ABaseChar::SR_SetCharacterRotation_Implementation(FRotator _TargetRotation,
 	CharacterRotation = _CharacterRotation;
 
 	SetActorRotation(CharacterRotation, ETeleportType::ResetPhysics);
+}
+
+void ABaseChar::SR_SetGait_Implementation(const EGait _NewGait)
+{
+	MC_SetGait(_NewGait);
+}
+
+void ABaseChar::MC_SetGait_Implementation(const EGait _NewGait)
+{
+	if(!IsLocallyControlled()){
+		Gait = _NewGait;
+
+		//on change
+		ILocomotion_Interface::Execute_BPI_SetGait(GetMesh()->GetAnimInstance(), Gait);
+
+		UpdateCharacterMovementSettings();
+	}
 }
 
 FVector ABaseChar::GetRightVector()
