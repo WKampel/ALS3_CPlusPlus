@@ -111,6 +111,23 @@ void ABaseChar::Landed(const FHitResult & Hit)
 	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 0.2f, false);
 }
 
+void ABaseChar::BPI_AddCharacterRotation_Implementation(FRotator _AddAmount)
+{
+	if(IsLocallyControlled()){
+	
+		//If you are having problems with rotation in the future, this might be why:
+		//The original ALS code used two DELAY nodes with 0 second delays in order to force
+		//AddCharacterRotation(_AddAmount); to run on the next frame.
+		//As you can see, I am just straight up adding the rotation this frame without that frame delay.
+		AddCharacterRotation(_AddAmount);
+	}
+}
+
+void ABaseChar::BPI_CameraShake_Implementation(TSubclassOf<UCameraShake> ShakeClass, float Scale)
+{
+	
+}
+
 // Called every frame
 void ABaseChar::Tick(float DeltaTime)
 {
@@ -468,6 +485,46 @@ void ABaseChar::SetAiming(bool _NewAiming)
 	}
 }
 
+void ABaseChar::SetWalkingSpeed(float _Speed)
+{
+	if(_Speed != WalkingSpeed){
+		WalkingSpeed = _Speed;
+
+		ILocomotion_Interface::Execute_BPI_SetWalkingSpeed(GetMesh()->GetAnimInstance(), WalkingSpeed);
+		UpdateCharacterMovementSettings();
+	}	
+}
+
+void ABaseChar::SetRunningSpeed(float _Speed)
+{
+	if (_Speed != RunningSpeed) {
+		RunningSpeed = _Speed;
+
+		ILocomotion_Interface::Execute_BPI_SetRunningSpeed(GetMesh()->GetAnimInstance(), RunningSpeed);
+		UpdateCharacterMovementSettings();
+	}
+}
+
+void ABaseChar::SetSprintingSpeed(float _Speed)
+{
+	if (_Speed != SprintingSpeed) {
+		SprintingSpeed = _Speed;
+
+		ILocomotion_Interface::Execute_BPI_SetSprintingSpeed(GetMesh()->GetAnimInstance(), SprintingSpeed);
+		UpdateCharacterMovementSettings();
+	}
+}
+
+void ABaseChar::SetCrouchingSpeed(float _Speed)
+{
+	if (_Speed != CrouchingSpeed) {
+		CrouchingSpeed = _Speed;
+
+		ILocomotion_Interface::Execute_BPI_SetCrouchingSpeed(GetMesh()->GetAnimInstance(), CrouchingSpeed);
+		UpdateCharacterMovementSettings();
+	}
+}
+
 void ABaseChar::SR_SetAiming_Implementation(bool _NewAiming)
 {
 	MC_SetAiming(_NewAiming);
@@ -506,6 +563,119 @@ void ABaseChar::MC_SetGait_Implementation(const EGait _NewGait)
 		ILocomotion_Interface::Execute_BPI_SetGait(GetMesh()->GetAnimInstance(), Gait);
 
 		UpdateCharacterMovementSettings();
+	}
+}
+
+void ABaseChar::SR_PlayNetworkedMontage_Implementation(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages)
+{
+	MC_PlayNetworkedMontage(MontageToPlay, InPlayRate, InTimeToStartMontageAt, StopAllMontages);
+}
+
+void ABaseChar::MC_PlayNetworkedMontage_Implementation(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages)
+{
+	if(!IsLocallyControlled()){
+		GetMesh()->GetAnimInstance()->Montage_Play(MontageToPlay, InPlayRate, EMontagePlayReturnType::MontageLength, InTimeToStartMontageAt, StopAllMontages);
+	}
+}
+
+void ABaseChar::To_Ragdoll()
+{
+	SR_To_Ragdoll();
+
+	Enable_Ragdoll();
+}
+
+void ABaseChar::Un_Ragdoll()
+{
+	SR_Un_Ragdoll(RagdollOnGround);
+
+	Disable_Ragdoll();
+}
+
+void ABaseChar::SR_To_Ragdoll_Implementation()
+{
+	MC_To_Ragdoll();
+}
+
+void ABaseChar::SR_Un_Ragdoll_Implementation(bool OnGround)
+{
+	MC_Un_Ragdoll(OnGround);
+}
+
+void ABaseChar::MC_To_Ragdoll_Implementation()
+{
+	if (!IsLocallyControlled()) {
+		Enable_Ragdoll();
+	}
+}
+
+void ABaseChar::MC_Un_Ragdoll_Implementation(bool OnGround)
+{
+	if (!IsLocallyControlled()) {
+		RagdollOnGround = OnGround;
+		Disable_Ragdoll();
+	}
+}
+
+
+void ABaseChar::Enable_Ragdoll()
+{
+	SetReplicateMovement(false);
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None, 0);
+	SetMovementMode(ECharMovementMode::Ragdoll);
+
+	//Disable capsule collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+
+	//Enable mesh collision
+	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+
+	//Simulate physics on all bodies below pelvis
+	GetMesh()->SetAllBodiesBelowSimulatePhysics(PelvisBone, true, true);
+}
+
+void ABaseChar::Disable_Ragdoll()
+{
+	SetReplicateMovement(true);
+
+	EMovementMode Mode = RagdollOnGround ? EMovementMode::MOVE_Walking : EMovementMode::MOVE_Falling;
+	GetCharacterMovement()->SetMovementMode(Mode, 0);
+
+	GetCharacterMovement()->Velocity = RagdollVelocity;
+
+	//Save pose snapshot (used for blending) and play get up animation (if ragdoll on ground)
+	ILocomotion_Interface::Execute_BPI_SavePoseSnapshot(GetMesh()->GetAnimInstance(), RagdollPoseSnapshot);
+
+	if(RagdollOnGround){
+		bool FaceDown = GetMesh()->GetSocketRotation(PelvisBone).Roll > 0.0f;
+		ILocomotion_Interface::Execute_BPI_Play_GetUp_Anim(GetMesh()->GetAnimInstance(), FaceDown);
+	}
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+
+	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+
+	//Unsimulate all bodies
+	GetMesh()->SetAllBodiesSimulatePhysics(false);
+}
+
+void ABaseChar::SR_Update_Ragdoll_Implementation(FVector _RagdollVelocity, FVector _RagdollLocation, FRotator _ActorRotation, FVector _ActorLocation)
+{
+	RagdollVelocity = _RagdollVelocity;
+	RagdollLocation = _RagdollLocation;
+	CharacterRotation = _ActorRotation;
+	TargetRotation = FRotator(0, 0, 0);
+
+	MC_Update_Ragdoll(_ActorLocation);
+}
+
+void ABaseChar::MC_Update_Ragdoll_Implementation(FVector _ActorLocation)
+{
+	if(!IsLocallyControlled()){
+		SetActorLocationAndRotation(_ActorLocation, CharacterRotation);
 	}
 }
 

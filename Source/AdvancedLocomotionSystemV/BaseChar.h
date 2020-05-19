@@ -9,10 +9,11 @@
 #include "Stance.h"
 #include "MovementMode.h"
 #include "Camera/CameraComponent.h"
+#include "Locomotion_Interface.h"
 #include "BaseChar.generated.h"
 
 UCLASS()
-class ADVANCEDLOCOMOTIONSYSTEMV_API ABaseChar : public ACharacter
+class ADVANCEDLOCOMOTIONSYSTEMV_API ABaseChar : public ACharacter, public ILocomotion_Interface
 {
 	GENERATED_BODY()
 
@@ -37,6 +38,12 @@ public:
 	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 
 	virtual void Landed(const FHitResult& Hit) override;
+
+	void BPI_AddCharacterRotation(FRotator _AddAmount);
+	virtual void BPI_AddCharacterRotation_Implementation(FRotator _AddAmount) override;
+
+	void BPI_CameraShake(TSubclassOf<UCameraShake> ShakeClass, float Scale);
+	virtual void BPI_CameraShake_Implementation(TSubclassOf<UCameraShake> ShakeClass, float Scale) override;
 
 public:
 
@@ -269,7 +276,29 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Setters")
 		void SetAiming(bool _NewAiming);
 
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+		void SetWalkingSpeed(float _Speed);
+
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+		void SetRunningSpeed(float _Speed);
+
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+		void SetSprintingSpeed(float _Speed);
+
+	UFUNCTION(BlueprintCallable, Category = "Setters")
+		void SetCrouchingSpeed(float _Speed);
+
+	UFUNCTION(BlueprintCallable, Category = "Ragdoll")
+		void To_Ragdoll();
+
+	UFUNCTION(BlueprintCallable, Category = "Ragdoll")
+		void Un_Ragdoll();
+
 private:
+
+	void Enable_Ragdoll();
+	void Disable_Ragdoll();
+
 	UFUNCTION(Server, Unreliable)
 	void SR_SetMovementInput(FVector _MovementInput);
 
@@ -290,6 +319,30 @@ private:
 
 	UFUNCTION(NetMulticast, Unreliable)
 		void MC_SetAiming(bool _NewAiming);
+
+	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Animation")
+		void SR_PlayNetworkedMontage(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages);
+
+	UFUNCTION(NetMulticast, Unreliable, Category = "Animation")
+		void MC_PlayNetworkedMontage(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages);
+
+	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Ragdoll")
+		void SR_To_Ragdoll();
+
+	UFUNCTION(NetMulticast, Unreliable, BlueprintCallable, Category = "Ragdoll")
+		void MC_To_Ragdoll();
+
+	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Ragdoll")
+		void SR_Un_Ragdoll(bool OnGround);
+
+	UFUNCTION(NetMulticast, Unreliable, BlueprintCallable, Category = "Ragdoll")
+		void MC_Un_Ragdoll(bool OnGround);
+
+	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Ragdoll")
+		void SR_Update_Ragdoll(FVector _RagdollVelocity, FVector _RagdollLocation, FRotator _ActorRotation, FVector _ActorLocation);
+
+	UFUNCTION(NetMulticast, Unreliable, BlueprintCallable, Category = "Ragdoll")
+		void MC_Update_Ragdoll(FVector _ActorLocation);
 
 	FVector GetRightVector();
 
