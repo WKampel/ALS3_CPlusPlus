@@ -52,7 +52,7 @@ ABaseChar::ABaseChar()
 	Camera->AttachTo(GetMesh(), FirstPersonCameraSocket);
 
 
-	JumpMaxHoldTime = 0.5f;
+	JumpMaxHoldTime = 0.0f;
 	BaseEyeHeight = 0.0f;
 	bUseControllerRotationYaw = false;
 
@@ -65,11 +65,12 @@ ABaseChar::ABaseChar()
 	GetCharacterMovement()->CrouchedHalfHeight = 60.0f;
 	GetCharacterMovement()->SetWalkableFloorAngle(50.0f);
 	GetCharacterMovement()->bCanWalkOffLedgesWhenCrouching = true;
-	GetCharacterMovement()->JumpZVelocity = 350.0f;
+	GetCharacterMovement()->JumpZVelocity = 500.0f;
 	GetCharacterMovement()->AirControl = 0.1f;
 	GetCharacterMovement()->RotationRate = FRotator(0, 0, 0);
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCharacterMovement()->NavAgentProps.bCanFly = true;
+	GetCharacterMovement()->GravityScale = 1.5f;
 
 }
 
@@ -119,15 +120,13 @@ void ABaseChar::Tick(float DeltaTime)
 	if(IsLocallyControlled()){
 		
 		if(ShouldSprint){
-			
-			if(Gait != EGait::Sprinting){
 				
-				if(CanSprint()){
-					SetGait(EGait::Sprinting);	
-				} else{
-					SetGait(EGait::Running);
+			if(CanSprint()){
+				if (Gait != EGait::Sprinting) {
+					SetGait(EGait::Sprinting);
 				}
-
+			} else{
+				SetGait(EGait::Running);
 			}
 
 		}else{
@@ -668,7 +667,10 @@ void ABaseChar::SetMovementMode(TEnumAsByte<ECharMovementMode> _NewMovementMode)
 
 		//on change
 		ILocomotion_Interface::Execute_BPI_SetMovementMode(GetMesh()->GetAnimInstance(), MovementMode);
-		ILocomotion_Interface::Execute_BPI_SetMovementMode(GetMesh()->GetPostProcessInstance(), MovementMode);
+
+		if(Cast<ILocomotion_Interface>(GetMesh()->GetPostProcessInstance())){
+			ILocomotion_Interface::Execute_BPI_SetMovementMode(GetMesh()->GetPostProcessInstance(), MovementMode);
+		}
 
 		UpdateCharacterMovementSettings();
 

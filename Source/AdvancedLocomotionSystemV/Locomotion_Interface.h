@@ -74,11 +74,5 @@ public:
 		void BPI_AddCharacterRotation(FRotator AddAmount);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		void BPI_ShowTraces(bool ShowTraces);
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void BPI_CameraShake(TSubclassOf<UCameraShake> ShakeClass, float Scale);
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		void BPI_SetRF(bool RF);
 };
