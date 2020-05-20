@@ -18,304 +18,221 @@ class ADVANCEDLOCOMOTIONSYSTEMV_API ABaseChar : public ACharacter, public ILocom
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ABaseChar();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void TickGrounded(float DeltaTime);
+
+	void TickManageCharacterRotation(float DeltaTime);
+
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    STATE VARIABLES
+	//
+	/////////////////////////////////////////////////////////////////
+
+	bool RagdollOnGround;
+
+	float PrevAimYaw;
+
+	float RotationRateMultiplier;
+
+	float LookUpDownRate;
+
+	float LookLeftRightRate;
+
+	bool ShouldSprint;
+
+	float ForwardAxisValue;
+
+	float RightAxisValue;
+
+	UPROPERTY(Replicated)
+	float RotationOffset;
+
+	TEnumAsByte<ECharMovementMode> PrevMovementMode;
+
+	TEnumAsByte<ECardinalDirection> CardinalDirection;
+
+	FVector RagdollVelocity;
+
+	UPROPERTY(Replicated)
+	FVector RagdollLocation;
+
+	UPROPERTY(Replicated)
+	FVector MovementInput;
+
+	FRotator JumpRotation;
+
+	UPROPERTY(Replicated)
+	FRotator TargetRotation;
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool IsAiming;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool IsMoving;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool HasMovementInput;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float Direction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float MovementInputVelocityDifference;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float TargetCharacterRotationDifference;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float AimYawDelta;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float AimYawRate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FRotator LastVelocityRotation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FRotator LastMovementInputRotation;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite)
+	FRotator LookingRotation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)
+	FRotator CharacterRotation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EGait> Gait;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EStance> Stance;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TEnumAsByte<ECharMovementMode> MovementMode;
+
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    CUSTOMIZABLE VARIABLES
+	//
+	/////////////////////////////////////////////////////////////////
+
+	float WalkingAcceleration;
+
+	float RunningAcceleration;
+
+	float WalkingDeceleration;
+
+	float RunningDeceleration;
+
+	float WalkingGroundFriction;
+
+	float RunningGroundFriction;
+
+	FName FirstPersonCameraSocket;
+
+	FName RagdollPoseSnapshot;
+
+	FName PelvisBone;
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float WalkingSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float RunningSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float SprintingSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float CrouchingSpeed;
+
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    NATIVE EVENT HANDLING FUNCTIONS
+	//
+	/////////////////////////////////////////////////////////////////
+	
 	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
 	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
-
+	
 	virtual void Landed(const FHitResult& Hit) override;
+	
+	void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PrevCustomMode) override;
 
-	void BPI_AddCharacterRotation(FRotator _AddAmount);
-	virtual void BPI_AddCharacterRotation_Implementation(FRotator _AddAmount) override;
-
-	void BPI_CameraShake(TSubclassOf<UCameraShake> ShakeClass, float Scale);
-	virtual void BPI_CameraShake_Implementation(TSubclassOf<UCameraShake> ShakeClass, float Scale) override;
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    PLAYER INPUT HANDLING FUNCTIONS
+	//
+	/////////////////////////////////////////////////////////////////
 
 	void ToggleStance();
+
 	void MoveForwardsBackwards(float _AxisValue);
+
 	void MoveRightLeft(float _AxisValue);
 
 	void LookUpDown(float _AxisValue);
+	
 	void LookLeftRight(float _AxisValue);
 
 	void Pressed_JumpAction();
+	
 	void Released_JumpAction();
 
 	void Pressed_AimAction();
+	
 	void Released_AimAction();
 
 	void Pressed_SprintAction();
+
 	void Released_SprintAction();
 
 	void Pressed_RagdollAction();
 
-public:
-
-
-	UPROPERTY(EditAnywhere)
-	UCameraComponent* Camera;
-
-	//Input
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
-	bool ShouldSprint;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
-	float LookUpDownRate;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
-	float LookLeftRightRate;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
-	float ForwardAxisValue;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Input")
-	float RightAxisValue;
-
-	//Essential
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential", Replicated)
-	FVector MovementInput;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	bool IsMoving;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	bool HasMovementInput;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	float AimYawDelta;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	float AimYawRate;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	float PrevAimYaw;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	float MovementInputVelocityDifference;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	float TargetCharacterRotationDifference;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	float Direction;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential", Replicated)
-	FRotator CharacterRotation;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential", Replicated)
-	FRotator LookingRotation;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	FRotator LastVelocityRotation;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Essential")
-	FRotator LastMovementInputRotation;
-
-	//ROTATION SYSTEM
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System", Replicated)
-	FRotator TargetRotation;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System")
-	FRotator JumpRotation;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System", Replicated)
-	float RotationOffset;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Rotation System")
-	float RotationRateMultiplier;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	TEnumAsByte<ECardinalDirection> CardinalDirection;
-
-	//MOVEMENT SYSTEM
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float WalkingSpeed;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float RunningSpeed;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float SprintingSpeed;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float CrouchingSpeed;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float WalkingAcceleration;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float RunningAcceleration;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float WalkingDeceleration;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float RunningDeceleration;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float WalkingGroundFriction;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Movement System")
-	float RunningGroundFriction;
-
-	//STATE VALUES	
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	TEnumAsByte<EGait> Gait;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	TEnumAsByte<EStance> Stance;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	TEnumAsByte<ECharMovementMode> MovementMode;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	TEnumAsByte<ECharMovementMode> PrevMovementMode;
-
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "State Values")
-	bool IsAiming;
-
-	//BONE NAMES
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Bone Names")
-	FName PelvisBone;
-
-	//RAGDOLL SYSTEM
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System")
-	FName RagdollPoseSnapshot;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System")
-	bool RagdollOnGround;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System", Replicated)
-	FVector RagdollLocation;
-	
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Ragdoll System")
-	FVector RagdollVelocity;
-
-	//DEBUG
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Debug")
-	bool ShowTraces;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Debug")
-	bool ShowSettings;
-
-	//CAMERA SYSTEM
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Camera System")
-	bool RightShoulder;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Camera System")
-	UCurveFloat* CameraLerpCurve;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Camera System")
-	FName FirstPersonCameraSocket;
 
 public:
-	UFUNCTION(BlueprintCallable)
-	FVector ChooseVelocity();
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    SETTER FUNCTIONS
+	//
+	/////////////////////////////////////////////////////////////////
 
-	UFUNCTION(BlueprintCallable)
-	void CalculateEssentialVariables();
-
-	UFUNCTION(BlueprintCallable)
-	void PlayerMovementInput(bool IsForwardAxis);
-
-	UFUNCTION(BlueprintCallable)
-	FVector GetForwardVector();
-
-	UFUNCTION(BlueprintCallable)
-	FRotator CalculateActorRotationInRagdoll(FRotator _RagdollRotation);
-
-	UFUNCTION(BlueprintCallable)
-	FVector CalculateActorLocationInRagdoll(FVector _RagdollLocation);
-
-	UFUNCTION(BlueprintCallable)
-		void SetCharacterRotation(FRotator _TargetRotation, bool _InterpRotation, float _InterpSpeed);
-
-	UFUNCTION(BlueprintCallable)
-	void AddCharacterRotation(FRotator _AddAmount);
-
-	UFUNCTION(BlueprintCallable)
-	void LimitRotation(float _AimYawLimit, float _InterpSpeed);
-
-	UFUNCTION(BlueprintCallable)
-	float CalculateRotationRate(float _SlowSpeed, float _SlowSpeedRate, float _FastSpeed, float _FastSpeedRate);
-
-	UFUNCTION(BlueprintCallable)
-	bool CardinalDirectionAngles(float _Value, float _Min, float _Max, float _Buffer, ECardinalDirection _CardinalDirection);
-
-	UFUNCTION(BlueprintCallable)
-	FRotator LookingDirectionWithOffset(float _OffsetInterpSpeed, float _NEAngle, float _NWAngle, float _SEAngle, float _SWAngle, float _Buffer);
-
-	UFUNCTION(BlueprintCallable)
-	bool CanSprint();
-
-	UFUNCTION(BlueprintCallable)
-	void CustomAcceleration();
-
-	UFUNCTION(BlueprintCallable)
-	float ChooseGroundFriction();
-
-	UFUNCTION(BlueprintCallable)
-	float ChooseMaxAcceleration();
-
-	UFUNCTION(BlueprintCallable)
-		float ChooseBrakingDeceleration();
-
-	UFUNCTION(BlueprintCallable)
-		float ChooseMaxWalkSpeed();
-
-	UFUNCTION(BlueprintCallable)
-	void UpdateCharacterMovementSettings();
-
-	//Setters
-	UFUNCTION(BlueprintCallable, Category = "Setters")
 	void SetMovementMode(TEnumAsByte<ECharMovementMode> _NewMovementMode);
 
-	UFUNCTION(BlueprintCallable, Category = "Setters")
 	void SetGait(TEnumAsByte<EGait> _NewGait);
 
-	UFUNCTION(BlueprintCallable, Category = "Setters")
-		void SetStance(TEnumAsByte<EStance> _NewStance);
+	void SetStance(TEnumAsByte<EStance> _NewStance);
 
-	UFUNCTION(BlueprintCallable, Category = "Setters")
-		void SetAiming(bool _NewAiming);
+	void SetAiming(bool _NewAiming);
 
-	UFUNCTION(BlueprintCallable, Category = "Setters")
-		void SetWalkingSpeed(float _Speed);
+	void SetWalkingSpeed(float _Speed);
 
-	UFUNCTION(BlueprintCallable, Category = "Setters")
-		void SetRunningSpeed(float _Speed);
+	void SetRunningSpeed(float _Speed);
 
-	UFUNCTION(BlueprintCallable, Category = "Setters")
-		void SetSprintingSpeed(float _Speed);
+	void SetSprintingSpeed(float _Speed);
 
-	UFUNCTION(BlueprintCallable, Category = "Setters")
-		void SetCrouchingSpeed(float _Speed);
+	void SetCrouchingSpeed(float _Speed);
 
-	UFUNCTION(BlueprintCallable, Category = "Ragdoll")
-		void To_Ragdoll();
-
-	UFUNCTION(BlueprintCallable, Category = "Ragdoll")
-		void Un_Ragdoll();
-
-private:
-
-	void Enable_Ragdoll();
-	void Disable_Ragdoll();
+	void SetCharacterRotation(FRotator _TargetRotation, bool _InterpRotation, float _InterpSpeed);
 
 	UFUNCTION(Server, Unreliable)
 	void SR_SetMovementInput(FVector _MovementInput);
@@ -327,47 +244,139 @@ private:
 	void SR_SetCharacterRotation(FRotator _TargetRotation, FRotator _CharacterRotation);
 
 	UFUNCTION(Server, Unreliable)
-		void SR_SetGait(const EGait _NewGait);
-
-	UFUNCTION(NetMulticast, Unreliable)
-		void MC_SetGait(const EGait _NewGait);
+	void SR_SetGait(const EGait _NewGait);
 
 	UFUNCTION(Server, Unreliable)
-		void SR_SetAiming(bool _NewAiming);
+	void SR_SetAiming(bool _NewAiming);
 
 	UFUNCTION(NetMulticast, Unreliable)
-		void MC_SetAiming(bool _NewAiming);
+	void MC_SetGait(const EGait _NewGait);
 
-	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Animation")
-		void SR_PlayNetworkedMontage(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages);
+	UFUNCTION(NetMulticast, Unreliable)
+	void MC_SetAiming(bool _NewAiming);
 
-	UFUNCTION(NetMulticast, Unreliable, Category = "Animation")
-		void MC_PlayNetworkedMontage(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages);
 
-	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Ragdoll")
-		void SR_To_Ragdoll();
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    RAGDOLL MANAGEMENT FUNCTIONS
+	//
+	/////////////////////////////////////////////////////////////////
 
-	UFUNCTION(NetMulticast, Unreliable, BlueprintCallable, Category = "Ragdoll")
-		void MC_To_Ragdoll();
+	void TickRagdoll(float DeltaTime);
 
-	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Ragdoll")
-		void SR_Un_Ragdoll(bool OnGround);
+	void Enable_Ragdoll();
 
-	UFUNCTION(NetMulticast, Unreliable, BlueprintCallable, Category = "Ragdoll")
-		void MC_Un_Ragdoll(bool OnGround);
+	void Disable_Ragdoll();
 
-	UFUNCTION(Server, Unreliable, BlueprintCallable, Category = "Ragdoll")
-		void SR_Update_Ragdoll(FVector _RagdollVelocity, FVector _RagdollLocation, FRotator _ActorRotation, FVector _ActorLocation);
+	void To_Ragdoll();
 
-	UFUNCTION(NetMulticast, Unreliable, BlueprintCallable, Category = "Ragdoll")
-		void MC_Update_Ragdoll(FVector _ActorLocation);
+	void Un_Ragdoll();
+
+	FRotator CalculateActorRotationInRagdoll(FRotator _RagdollRotation);
+
+	FVector CalculateActorLocationInRagdoll(FVector _RagdollLocation);
+
+	UFUNCTION(Server, Unreliable)
+	void SR_To_Ragdoll();
+
+	UFUNCTION(Server, Unreliable)
+	void SR_Un_Ragdoll(bool OnGround);
+
+	UFUNCTION(Server, Unreliable)
+	void SR_Update_Ragdoll(FVector _RagdollVelocity, FVector _RagdollLocation, FRotator _ActorRotation, FVector _ActorLocation);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MC_To_Ragdoll();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MC_Un_Ragdoll(bool OnGround);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MC_Update_Ragdoll(FVector _ActorLocation);
+
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    CHARACTER CALCULATION FUNCTIONS
+	//
+	/////////////////////////////////////////////////////////////////
+
+	void CalculateEssentialVariables();
+
+	void PlayerMovementInput(bool IsForwardAxis);
+
+	FVector GetForwardVector();
+
+	void AddCharacterRotation(FRotator _AddAmount);
+
+	void LimitRotation(float _AimYawLimit, float _InterpSpeed);
+
+	float CalculateRotationRate(float _SlowSpeed, float _SlowSpeedRate, float _FastSpeed, float _FastSpeedRate);
+
+	bool CardinalDirectionAngles(float _Value, float _Min, float _Max, float _Buffer, ECardinalDirection _CardinalDirection);
+
+	FRotator LookingDirectionWithOffset(float _OffsetInterpSpeed, float _NEAngle, float _NWAngle, float _SEAngle, float _SWAngle, float _Buffer);
+
+	bool CanSprint();
+
+	void CustomAcceleration();
+
+	float ChooseGroundFriction();
+
+	float ChooseMaxAcceleration();
+
+	float ChooseBrakingDeceleration();
+
+	float ChooseMaxWalkSpeed();
+
+	void UpdateCharacterMovementSettings();
 
 	FVector GetRightVector();
 
-	void OnMovementModeChanged(EMovementMode PrevMovementMode,  uint8 PrevCustomMode) override;
+public:
+	UFUNCTION(BlueprintCallable)
+	FVector ChooseVelocity();
 
 
-	void TickGrounded(float DeltaTime);
-	void TickRagdoll(float DeltaTime);
-	void TickManageCharacterRotation(float DeltaTime);
-};
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    INTERFACE FUNCTIONS
+	//
+	/////////////////////////////////////////////////////////////////
+
+	void BPI_AddCharacterRotation(FRotator _AddAmount);
+
+	void BPI_CameraShake(TSubclassOf<UCameraShake> ShakeClass, float Scale);
+
+	virtual void BPI_AddCharacterRotation_Implementation(FRotator _AddAmount) override;
+
+	virtual void BPI_CameraShake_Implementation(TSubclassOf<UCameraShake> ShakeClass, float Scale) override;
+
+public:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    CHARACTER COMPONENTS
+	//
+	/////////////////////////////////////////////////////////////////
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UCameraComponent* Camera;
+
+
+private:
+	/////////////////////////////////////////////////////////////////
+	//
+	//                    ANIMATION FUNCTIONS
+	//
+	/////////////////////////////////////////////////////////////////
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MC_PlayNetworkedMontage(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages);
+
+public:
+	UFUNCTION(Server, Unreliable, BlueprintCallable)
+	void SR_PlayNetworkedMontage(UAnimMontage* MontageToPlay, float InPlayRate, float InTimeToStartMontageAt, bool StopAllMontages);
+
+}; 

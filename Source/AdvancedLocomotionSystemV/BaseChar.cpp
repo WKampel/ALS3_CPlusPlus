@@ -44,8 +44,6 @@ ABaseChar::ABaseChar()
 	PelvisBone = FName("pelvis");
 	RagdollPoseSnapshot = FName("RagdollPose");
 
-	RightShoulder = true;
-
 	FirstPersonCameraSocket = FName("head");
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(FName("Camera"));
